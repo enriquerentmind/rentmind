@@ -1086,8 +1086,7 @@ export default function RentMind() {
               </div>
             </div>
           </Card>
-
-          {plan === "starter" && <Btn v="primary" full sz="lg" style={{ marginBottom: 12 }} onClick={() => open("paywall")}>⚡ Upgrade to Pro — $19/mo</Btn>}
+<Btn v="danger" full sz="lg" style={{ marginBottom: 12 }} onClick={async () => { await supabase.auth.signOut(); }}>🚪 Sign Out</Btn>
 
           <Section title="PORTFOLIO STATS">
             <Card style={{ overflow: "hidden" }}>

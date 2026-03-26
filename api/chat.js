@@ -15,8 +15,14 @@ export default async function handler(req, res) {
     });
 
     const data = await response.json();
+    
+    if (data.error) {
+      console.error('Anthropic error:', JSON.stringify(data.error));
+    }
+    
     res.status(200).json(data);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to connect to AI' });
+    console.error('Function error:', error.message);
+    res.status(500).json({ error: error.message });
   }
 }

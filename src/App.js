@@ -1,8 +1,8 @@
 /* eslint-disable */
+import { supabase } from "./supabase";
 import { useState, useEffect, useRef } from "react";
-import { supabase } from './supabase';
 
-// ── THEME
+// ── THEME ────────────────────────────────────────────────────────────────────
 const C = {
   bg: "#060A12",
   surface: "#0B1220",
@@ -301,7 +301,7 @@ function InvoiceReceiptModal({ tenant, type, lastPayment, onLogPayment, onClose 
         ? `Write a professional rent invoice/payment request email. Tenant: ${tenant.name}, ${ht(tenant.housingType).l} Unit ${tenant.unit}, ${tenant.address}. Amount due: $${tenant.rent}. Due: ${tenant.dueDay}th March 2026. Payment method: ${m}. Risk level: ${tenant.risk}. Sign off as "Your Property Manager – RentMind". Plain text, under 120 words.`
         : `Write a professional rent receipt email confirming payment. Tenant: ${tenant.name}, ${ht(tenant.housingType).l} Unit ${tenant.unit}, ${tenant.address}. Amount paid: $${lastPayment?.amount || tenant.rent}. Method: ${m}. Date: ${lastPayment?.date || "March 2026"}. Period: March 2026. Next due: April ${tenant.dueDay}. Sign off as "Your Property Manager – RentMind". Plain text, under 120 words.`;
       try {
-        const r = await fetch("https://api.anthropic.com/v1/messages", {
+        const r = await fetch("/api/chat", {
           method: "POST", headers: { "Content-Type": "application/json", "x-api-key": process.env.REACT_APP_ANTHROPIC_KEY, "anthropic-version": "2023-06-01", "anthropic-dangerous-allow-browser": "true" },
           body: JSON.stringify({ model: "claude-sonnet-4-20250514", max_tokens: 600, system: "You write concise, professional rental payment emails. Plain text only. No markdown.", messages: [{ role: "user", content: prompt }] })
         });
@@ -1087,7 +1087,9 @@ export default function RentMind() {
               </div>
             </div>
           </Card>
-<Btn v="danger" full sz="lg" style={{ marginBottom: 12 }} onClick={async () => { await supabase.auth.signOut(); }}>🚪 Sign Out</Btn>
+
+          <Btn v="danger" full sz="lg" style={{ marginBottom: 12 }} onClick={async () => { await supabase.auth.signOut(); }}>🚪 Sign Out</Btn>
+          {plan === "starter" && <Btn v="primary" full sz="lg" style={{ marginBottom: 12 }} onClick={() => open("paywall")}>⚡ Upgrade to Pro — $19/mo</Btn>}
 
           <Section title="PORTFOLIO STATS">
             <Card style={{ overflow: "hidden" }}>

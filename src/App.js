@@ -1,7 +1,8 @@
-/* eslint-disable */
+───────────/* eslint-disable */
 import { useState, useEffect, useRef } from "react";
+import { supabase } from './supabase';
 
-// ── THEME ────────────────────────────────────────────────────────────────────
+// ── THEME ─────────────────────────────────────────────────────────
 const C = {
   bg: "#060A12",
   surface: "#0B1220",

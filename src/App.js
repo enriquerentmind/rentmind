@@ -298,8 +298,8 @@ function InvoiceReceiptModal({ tenant, type, lastPayment, onLogPayment, onClose 
     const generate = async () => {
       const m = PAY_METHODS.find(p => p.v === method)?.l || "e-Transfer";
       const prompt = type === "invoice"
-        ? `Write a professional rent invoice/payment request email. Tenant: ${tenant.name}, ${ht(tenant.housingType).l} Unit ${tenant.unit}, ${tenant.address}. Amount due: $${tenant.rent}. Due: ${tenant.dueDay}th March 2026. Payment method: ${m}. Risk level: ${tenant.risk}. Sign off as "Your Property Manager – RentMind". Plain text, under 120 words.`
-        : `Write a professional rent receipt email confirming payment. Tenant: ${tenant.name}, ${ht(tenant.housingType).l} Unit ${tenant.unit}, ${tenant.address}. Amount paid: $${lastPayment?.amount || tenant.rent}. Method: ${m}. Date: ${lastPayment?.date || "March 2026"}. Period: March 2026. Next due: April ${tenant.dueDay}. Sign off as "Your Property Manager – RentMind". Plain text, under 120 words.`;
+        ? `Write a professional rent invoice/payment request email. Tenant: ${tenant.name}, ${ht(tenant.housingType).l} Unit ${tenant.unit}, ${tenant.address}. Amount due: $${tenant.rent}. Due: ${tenant.dueDay}th March 2026. Payment method: ${m}. Risk level: ${tenant.risk}. Sign off as "Your Property Manager – RentSage". Plain text, under 120 words.`
+        : `Write a professional rent receipt email confirming payment. Tenant: ${tenant.name}, ${ht(tenant.housingType).l} Unit ${tenant.unit}, ${tenant.address}. Amount paid: $${lastPayment?.amount || tenant.rent}. Method: ${m}. Date: ${lastPayment?.date || "March 2026"}. Period: March 2026. Next due: April ${tenant.dueDay}. Sign off as "Your Property Manager – RentSage". Plain text, under 120 words.`;
       try {
         const r = await fetch("/api/chat", {
           method: "POST", headers: { "Content-Type": "application/json" },
@@ -617,7 +617,7 @@ function TenantDetail({ tenant, onClose, onEdit, onDelete, onInvoice, onReceipt,
 
 // ── AI CHAT ───────────────────────────────────────────────────────────────────
 function AIChat({ tenants, expenses, onClose }) {
-  const [msgs, setMsgs] = useState([{ role: "assistant", text: "Hi! I'm RentMind AI. I know all your properties, tenants, payments, and expenses. Ask me anything." }]);
+  const [msgs, setMsgs] = useState([{ role: "assistant", text: "Hi! I'm RentSage AI. I know all your properties, tenants, payments, and expenses. Ask me anything." }]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const ref = useRef();
@@ -635,7 +635,7 @@ function AIChat({ tenants, expenses, onClose }) {
     try {
       const r = await fetch("/api/chat", {
         method: "POST", headers: { "Content-Type": "application/json", "x-api-key": process.env.REACT_APP_ANTHROPIC_KEY, "anthropic-version": "2023-06-01", "anthropic-dangerous-allow-browser": "true" },
-        body: JSON.stringify({ model: "claude-sonnet-4-20250514", max_tokens: 1000, system: `RentMind AI for a small landlord. Date: March 10, 2026.\n${ctx}\nBe concise and practical.`, messages: next.slice(1).map(m => ({ role: m.role, content: m.text })) })
+        body: JSON.stringify({ model: "claude-sonnet-4-20250514", max_tokens: 1000, system: `RentSage AI for a small landlord. Date: March 10, 2026.\n${ctx}\nBe concise and practical.`, messages: next.slice(1).map(m => ({ role: m.role, content: m.text })) })
       });
       const d = await r.json();
       setMsgs(p => [...p, { role: "assistant", text: d.content?.[0]?.text || "Sorry, try again." }]);
@@ -653,7 +653,7 @@ function AIChat({ tenants, expenses, onClose }) {
           <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
             <div style={{ width: 34, height: 34, borderRadius: 10, background: C.accentGl, border: `1px solid ${C.accent}35`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>🤖</div>
             <div>
-              <div style={{ color: C.text, fontWeight: 700, fontSize: 13 }}>RentMind AI</div>
+              <div style={{ color: C.text, fontWeight: 700, fontSize: 13 }}>RentSage AI</div>
               <div style={{ color: C.green, fontSize: 10, display: "flex", gap: 4, alignItems: "center" }}><div style={{ width: 5, height: 5, borderRadius: "50%", background: C.green }} />Online</div>
             </div>
           </div>
@@ -691,7 +691,7 @@ function Paywall({ onSubscribe, onClose }) {
       <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 20, width: "100%", maxWidth: 390, maxHeight: "90vh", overflowY: "auto", padding: 22, boxShadow: `0 0 80px ${C.accent}20` }}>
         <div style={{ textAlign: "center", marginBottom: 20 }}>
           <div style={{ fontSize: 32, marginBottom: 7 }}>⚡</div>
-          <div style={{ color: C.text, fontWeight: 800, fontSize: 18 }}>Upgrade RentMind</div>
+          <div style={{ color: C.text, fontWeight: 800, fontSize: 18 }}>Upgrade RentSage</div>
           <div style={{ color: C.sub, fontSize: 12, marginTop: 4 }}>You've reached the free plan limit</div>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 9, marginBottom: 16 }}>
@@ -726,7 +726,7 @@ function Paywall({ onSubscribe, onClose }) {
 // ── MAIN APP ──────────────────────────────────────────────────────────────────
 const FREE_LIMIT = 2;
 
-export default function RentMind() {
+export default function RentSage() {
   const [tenants, setTenants] = useState(SEED);
   const [expenses, setExpenses] = useState(SEED_EXPENSES);
   const [tab, setTab] = useState("dashboard");

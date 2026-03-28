@@ -46,7 +46,7 @@ export default function Auth() {
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');*{box-sizing:border-box;margin:0;padding:0}`}</style>
       <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 20, padding: 32, width: "100%", maxWidth: 400 }}>
         <div style={{ textAlign: "center", marginBottom: 28 }}>
-          <div style={{ fontSize: 26, fontWeight: 800, marginBottom: 6 }}>Rent<span style={{ color: C.accent }}>Mind</span></div>
+          <div style={{ fontSize: 26, fontWeight: 800, marginBottom: 6 }}>Rent<span style={{ color: C.accent }}>Sage</span></div>
           <div style={{ color: C.sub, fontSize: 13 }}>{mode === "login" ? "Sign in to your account" : "Create your free account"}</div>
         </div>
 

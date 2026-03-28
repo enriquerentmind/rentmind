@@ -709,7 +709,7 @@ function Paywall({ onSubscribe, onClose }) {
                 {p.features.map((f, i) => <div key={i} style={{ color: C.sub, fontSize: 11, display: "flex", gap: 6 }}><span style={{ color: C.green }}>✓</span>{f}</div>)}
               </div>
               {p.id !== "starter" && (
-                <Btn v={p.popular ? "primary" : "ghost"} full sz="sm" disabled={loading === p.id} onClick={() => { setLoading(p.id); setTimeout(() => { onSubscribe(p); setLoading(null); }, 1500); }}>
+                <Btn v={p.popular ? "primary" : "ghost"} full sz="sm" disabled={loading === p.id} onClick={() => { window.open(p.id === 'pro' ? 'https://buy.stripe.com/test_9B600l4zw4Wh1jrcCo6sw00' : 'https://buy.stripe.com/test_28E9AV7LIfAVgel31O6sw01', '_blank'); }}>
                   {loading === p.id ? "Processing..." : `Get ${p.name} — $${p.price}/mo`}
                 </Btn>
               )}

@@ -15,12 +15,17 @@ export default function Landing() {
     });
   });
 
+  const [showIOSInstructions, setShowIOSInstructions] = useState(false);
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+
   const handleInstall = async () => {
     if (deferredPrompt) {
       deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
       if (outcome === 'accepted') setShowInstall(false);
       setDeferredPrompt(null);
+    } else if (isIOS) {
+      setShowIOSInstructions(true);
     } else {
       window.open('/app', '_blank');
     }
@@ -34,6 +39,34 @@ export default function Landing() {
         @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
         @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
       `}</style>
+
+      {/* iOS Install Instructions Popup */}
+      {showIOSInstructions && (
+        <div style={{ position: "fixed", inset: 0, background: "#000C", zIndex: 999, display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
+          <div style={{ background: "#0F1A2E", border: "1px solid #1A2D45", borderRadius: "20px 20px 0 0", width: "100%", maxWidth: 440, padding: "28px 24px 40px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+              <div style={{ color: "#F0F8FF", fontWeight: 800, fontSize: 17 }}>Install RentSage</div>
+              <button onClick={() => setShowIOSInstructions(false)} style={{ background: "none", border: "none", color: "#7A97BC", fontSize: 20, cursor: "pointer" }}>✕</button>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              {[
+                { n: "1", t: "Open in Safari", d: "Make sure you're using Safari browser" },
+                { n: "2", t: "Tap the Share button", d: "The box with an arrow at the bottom of your screen ⬆️" },
+                { n: "3", t: "Tap 'Add to Home Screen'", d: "Scroll down in the menu to find this option" },
+                { n: "4", t: "Tap Add", d: "RentSage will appear on your home screen like an app!" },
+              ].map((s, i) => (
+                <div key={i} style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
+                  <div style={{ width: 28, height: 28, borderRadius: "50%", background: "#38BDF8", display: "flex", alignItems: "center", justifyContent: "center", color: "#060A12", fontWeight: 800, fontSize: 13, flexShrink: 0 }}>{s.n}</div>
+                  <div>
+                    <div style={{ color: "#F0F8FF", fontWeight: 700, fontSize: 14 }}>{s.t}</div>
+                    <div style={{ color: "#7A97BC", fontSize: 12, marginTop: 2 }}>{s.d}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Nav */}
       <nav style={{ padding: "20px 24px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #1A2D45" }}>

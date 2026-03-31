@@ -111,6 +111,16 @@ export default function Landing() {
           </div>
         )}
         <p style={{ color: "#2D4460", fontSize: 12, marginTop: 14 }}>Free to start · No credit card required</p>
+
+        <div style={{ display: "flex", gap: 12, justifyContent: "center", marginTop: 24, flexWrap: "wrap" }}>
+          <a href="/app" style={{ background: "#38BDF8", color: "#060A12", padding: "13px 24px", borderRadius: 10, fontWeight: 800, fontSize: 14, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 8 }}>
+            🌐 Open in Browser
+          </a>
+          <button onClick={handleInstall} style={{ background: "#0F1A2E", border: "1px solid #1A2D45", color: "#F0F8FF", padding: "13px 24px", borderRadius: 10, fontWeight: 800, fontSize: 14, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 8 }}>
+            📱 Install App
+          </button>
+        </div>
+        <p style={{ color: "#2D4460", fontSize: 11, marginTop: 12 }}>📱 iPhone: Safari → Share → Add to Home Screen</p>
       </div>
 
       {/* App Preview */}

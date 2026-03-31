@@ -4,6 +4,27 @@ import { useState } from "react";
 export default function Landing() {
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [showInstall, setShowInstall] = useState(false);
+
+  useState(() => {
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setShowInstall(true);
+    });
+  });
+
+  const handleInstall = async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') setShowInstall(false);
+      setDeferredPrompt(null);
+    } else {
+      window.open('/app', '_blank');
+    }
+  };
 
   return (
     <div style={{ background: "#060A12", minHeight: "100vh", fontFamily: "'Plus Jakarta Sans', sans-serif", color: "#F0F8FF" }}>

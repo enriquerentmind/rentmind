@@ -29,16 +29,13 @@ export default function Landing() {
         <div style={{ display: "inline-block", background: "#38BDF812", border: "1px solid #38BDF840", borderRadius: 20, padding: "6px 16px", fontSize: 12, fontWeight: 700, color: "#38BDF8", marginBottom: 24, letterSpacing: 1 }}>
           🇨🇦 BUILT FOR CANADIAN LANDLORDS
         </div>
-
         <h1 style={{ fontSize: 42, fontWeight: 800, lineHeight: 1.15, marginBottom: 20, letterSpacing: -1 }}>
           Manage your rentals<br />
           <span style={{ color: "#38BDF8" }}>smarter with AI</span>
         </h1>
-
         <p style={{ color: "#7A97BC", fontSize: 17, lineHeight: 1.7, marginBottom: 40 }}>
           RentSage helps small landlords track payments, manage tenants, predict late payers, and send AI-powered reminders — all in one place.
         </p>
-
         {submitted ? (
           <div style={{ background: "#22D3A018", border: "1px solid #22D3A040", borderRadius: 14, padding: "20px", color: "#22D3A0", fontWeight: 700, fontSize: 16 }}>
             ✅ You're on the waitlist! We'll be in touch soon.
@@ -59,7 +56,6 @@ export default function Landing() {
             </button>
           </div>
         )}
-
         <p style={{ color: "#2D4460", fontSize: 12, marginTop: 14 }}>Free to start · No credit card required</p>
       </div>
 
@@ -73,12 +69,10 @@ export default function Landing() {
             </div>
             <div style={{ background: "#38BDF818", border: "1px solid #38BDF840", borderRadius: 8, padding: "6px 10px", color: "#38BDF8", fontSize: 11, fontWeight: 700 }}>🤖 AI</div>
           </div>
-
           <div style={{ background: "#F8717112", border: "1px solid #F8717130", borderRadius: 10, padding: "10px 12px", marginBottom: 12, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div style={{ color: "#F87171", fontSize: 12, fontWeight: 700 }}>⚠ 1 tenant at risk</div>
             <div style={{ background: "#F8717120", borderRadius: 6, padding: "4px 8px", color: "#F87171", fontSize: 10, fontWeight: 700 }}>Ask AI</div>
           </div>
-
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
             <div style={{ background: "#060A12", borderRadius: 12, padding: "14px" }}>
               <div style={{ color: "#2D4460", fontSize: 9, letterSpacing: 1.5, marginBottom: 6 }}>COLLECTED</div>
@@ -91,7 +85,6 @@ export default function Landing() {
               <div style={{ color: "#2D4460", fontSize: 10 }}>after expenses</div>
             </div>
           </div>
-
           <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 6 }}>
             {[{ l: "UNITS", v: "4", c: "#38BDF8" }, { l: "PAID", v: "2", c: "#22D3A0" }, { l: "PENDING", v: "2", c: "#F87171" }, { l: "MAINT", v: "1", c: "#FB923C" }].map((s, i) => (
               <div key={i} style={{ background: "#060A12", borderRadius: 10, padding: "10px 6px", textAlign: "center" }}>
@@ -99,6 +92,23 @@ export default function Landing() {
                 <div style={{ color: "#2D4460", fontSize: 7, letterSpacing: 1 }}>{s.l}</div>
               </div>
             ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Demo Video Section */}
+      <div style={{ padding: "0 24px 60px", maxWidth: 600, margin: "0 auto", textAlign: "center" }}>
+        <div style={{ display: "inline-block", background: "#38BDF812", border: "1px solid #38BDF840", borderRadius: 20, padding: "6px 16px", fontSize: 12, fontWeight: 700, color: "#38BDF8", marginBottom: 20, letterSpacing: 1 }}>
+          🎬 SEE IT IN ACTION
+        </div>
+        <h2 style={{ fontSize: 28, fontWeight: 800, marginBottom: 16, letterSpacing: -0.5 }}>Watch how it works</h2>
+        <p style={{ color: "#7A97BC", fontSize: 15, marginBottom: 28, lineHeight: 1.6 }}>See how RentSage helps Canadian landlords manage tenants, track payments and use AI — in under 2 minutes.</p>
+        <div style={{ background: "#0F1A2E", border: "1px solid #1A2D45", borderRadius: 20, overflow: "hidden", aspectRatio: "16/9", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+          <div style={{ textAlign: "center" }}>
+            <div style={{ width: 70, height: 70, borderRadius: "50%", background: "#38BDF8", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 14px", boxShadow: "0 0 40px #38BDF855" }}>
+              <div style={{ width: 0, height: 0, borderTop: "14px solid transparent", borderBottom: "14px solid transparent", borderLeft: "22px solid #060A12", marginLeft: 4 }} />
+            </div>
+            <div style={{ color: "#7A97BC", fontSize: 13 }}>Demo video coming soon</div>
           </div>
         </div>
       </div>
@@ -124,6 +134,32 @@ export default function Landing() {
             </div>
           ))}
         </div>
+      </div>
+
+      {/* Customer Support Section */}
+      <div style={{ padding: "0 24px 60px", maxWidth: 600, margin: "0 auto", textAlign: "center" }}>
+        <div style={{ display: "inline-block", background: "#22D3A012", border: "1px solid #22D3A040", borderRadius: 20, padding: "6px 16px", fontSize: 12, fontWeight: 700, color: "#22D3A0", marginBottom: 20, letterSpacing: 1 }}>
+          💬 SUPPORT
+        </div>
+        <h2 style={{ fontSize: 28, fontWeight: 800, marginBottom: 16, letterSpacing: -0.5 }}>We're here to help</h2>
+        <p style={{ color: "#7A97BC", fontSize: 15, marginBottom: 32, lineHeight: 1.6 }}>Have a question or need help? Our support team is ready to assist you.</p>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 32 }}>
+          {[
+            { i: "📧", t: "Email Support", d: "support@rentsage.ca", sub: "Reply within 24 hours" },
+            { i: "📚", t: "Help Center", d: "Guides & tutorials", sub: "Coming soon" },
+            { i: "🤖", t: "AI Assistant", d: "In-app AI chat", sub: "Available 24/7" },
+          ].map((s, i) => (
+            <div key={i} style={{ background: "#0F1A2E", border: "1px solid #1A2D45", borderRadius: 14, padding: "18px 12px", textAlign: "center" }}>
+              <div style={{ fontSize: 24, marginBottom: 8 }}>{s.i}</div>
+              <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 4 }}>{s.t}</div>
+              <div style={{ color: "#38BDF8", fontSize: 11, marginBottom: 4 }}>{s.d}</div>
+              <div style={{ color: "#2D4460", fontSize: 10 }}>{s.sub}</div>
+            </div>
+          ))}
+        </div>
+        <a href="mailto:support@rentsage.ca" style={{ background: "#22D3A0", color: "#060A12", padding: "13px 28px", borderRadius: 12, fontWeight: 800, fontSize: 14, textDecoration: "none", display: "inline-block" }}>
+          Contact Support →
+        </a>
       </div>
 
       {/* Pricing */}

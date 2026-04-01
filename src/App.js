@@ -349,7 +349,7 @@ function InvoiceReceiptModal({ tenant, type, lastPayment, onLogPayment, onClose 
       <div style={{ display: "flex", gap: 8 }}>
         <Btn v="muted" full onClick={onClose}>Cancel</Btn>
         {type === "invoice" && <Btn v="ghost" full onClick={() => setStep("log")}>💰 Log Payment</Btn>}
-        <Btn v="primary" full disabled={loading} onClick={() => setSent(true)}>📧 Send</Btn>
+        <Btn v="primary" full disabled={loading} onClick={async () => { await fetch('/api/send-email', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ to: tenant.email, subject: 'RentSage - ' + (type === 'invoice' ? 'Invoice' : 'Receipt') + ' for Unit ' + tenant.unit, html: '<div style="font-family:sans-serif;padding:20px"><h2>RentSage</h2><p>Hi ' + tenant.name + ',</p><p>' + (type === 'invoice' ? 'Your rent of $' + tenant.rent + ' is due.' : 'Payment of $' + tenant.rent + ' received. Thank you!') + '</p></div>' }) }); setSent(true); }}>📧 Send</Btn>
       </div>
     </Sheet>
   );

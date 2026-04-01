@@ -1,5 +1,6 @@
 /* eslint-disable */
 import { useState } from "react";
+import { supabase } from "./supabase";
 
 export default function Landing() {
   const [email, setEmail] = useState("");
@@ -104,7 +105,7 @@ export default function Landing() {
               style={{ flex: 1, minWidth: 220, background: "#0F1A2E", border: "1px solid #1A2D45", borderRadius: 10, padding: "13px 16px", color: "#F0F8FF", fontSize: 14, outline: "none" }}
             />
             <button
-              onClick={() => { if (email.includes("@")) setSubmitted(true); }}
+              onClick={() => { if (email.includes("@")) { supabase.from("waitlist").insert({ email }).then(); setSubmitted(true); } }}
               style={{ background: "#38BDF8", border: "none", borderRadius: 10, padding: "13px 24px", color: "#060A12", fontWeight: 800, fontSize: 14, cursor: "pointer" }}>
               Get Early Access
             </button>

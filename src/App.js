@@ -1,7 +1,7 @@
 /* eslint-disable */
 import { supabase } from "./supabase";
 import { useState, useEffect, useRef } from "react";
-import { PrivacyPolicy, TermsOfService } from './Legal';
+
 // ── THEME ────────────────────────────────────────────────────────────────────
 const C = {
   bg: "#060A12",
@@ -55,64 +55,55 @@ const ht = (v) => HOUSING.find(h => h.v === v) || HOUSING[0];
 const rc = (r) => r === "high" ? C.red : r === "medium" ? C.yellow : C.green;
 const rl = (r) => r === "high" ? "HIGH RISK" : r === "medium" ? "WATCH" : "ON TRACK";
 
-// ── SEED DATA ────────────────────────────────────────────────────────────────
-const SEED = [
-  {
-    id: 1, name: "Marcus Johnson", unit: "1A", housingType: "apartment",
-    address: "220 King St W, Toronto, ON M5V 1J2", rent: 1200, dueDay: 1,
-    email: "marcus@email.com", phone: "647-555-0101", paid: false,
-    leaseStart: "2024-03-01", leaseEnd: "2025-03-01",
-    autopay: false, lateFee: 50, streak: 2, risk: "high",
-    notes: "Occasionally pays late end of month",
-    history: [true, true, false, true, false, false],
-    payments: [{ date: "Feb 1", amount: 1200, method: "e-Transfer", late: false }],
-    maintenance: [{ id: 101, type: "Plumbing", desc: "Leaking faucet in bathroom", status: "open", date: "2026-03-05", priority: "medium" }],
-    docs: [{ name: "Lease Agreement.pdf", date: "2024-03-01" }],
-  },
-  {
-    id: 2, name: "Priya Sharma", unit: "2B", housingType: "condo",
-    address: "1 Yonge St, Toronto, ON M5E 1W7", rent: 950, dueDay: 1,
-    email: "priya@email.com", phone: "647-555-0102", paid: true,
-    leaseStart: "2023-06-01", leaseEnd: "2025-06-01",
-    autopay: true, lateFee: 50, streak: 8, risk: "low",
-    notes: "",
-    history: [true, true, true, true, true, true],
-    payments: [{ date: "Mar 1", amount: 950, method: "e-Transfer", late: false }, { date: "Feb 1", amount: 950, method: "e-Transfer", late: false }],
-    maintenance: [],
-    docs: [{ name: "Lease Agreement.pdf", date: "2023-06-01" }, { name: "Inspection Report.pdf", date: "2023-06-01" }],
-  },
-  {
-    id: 3, name: "Derek Mills", unit: "3C", housingType: "townhouse",
-    address: "55 Front St E, Mississauga, ON L5G 1C1", rent: 1100, dueDay: 5,
-    email: "derek@email.com", phone: "647-555-0103", paid: false,
-    leaseStart: "2024-09-01", leaseEnd: "2025-09-01",
-    autopay: false, lateFee: 75, streak: 1, risk: "medium",
-    notes: "Prefers text reminders",
-    history: [true, false, true, true, false, true],
-    payments: [{ date: "Feb 4", amount: 1100, method: "Cheque", late: false }],
-    maintenance: [{ id: 201, type: "HVAC", desc: "Heating not working properly", status: "in_progress", date: "2026-02-28", priority: "high" }],
-    docs: [{ name: "Lease Agreement.pdf", date: "2024-09-01" }],
-  },
-  {
-    id: 4, name: "Aaliyah Torres", unit: "4A", housingType: "house",
-    address: "88 Maple Ave, Brampton, ON L6S 2K7", rent: 875, dueDay: 1,
-    email: "aaliyah@email.com", phone: "647-555-0104", paid: true,
-    leaseStart: "2023-01-01", leaseEnd: "2025-01-01",
-    autopay: true, lateFee: 50, streak: 12, risk: "low",
-    notes: "Best tenant",
-    history: [true, true, true, true, true, true],
-    payments: [{ date: "Mar 1", amount: 875, method: "e-Transfer", late: false }],
-    maintenance: [],
-    docs: [{ name: "Lease Agreement.pdf", date: "2023-01-01" }, { name: "Renewal Letter.pdf", date: "2025-01-01" }],
-  },
-];
+// helper: map DB row → app tenant shape
+const dbToTenant = (r) => ({
+  id: r.id,
+  name: r.name || "",
+  unit: r.unit || "",
+  housingType: r.housing_type || "apartment",
+  address: r.address || "",
+  rent: r.rent || 0,
+  dueDay: r.due_day || 1,
+  email: r.email || "",
+  phone: r.phone || "",
+  paid: r.paid || false,
+  streak: r.streak || 0,
+  risk: r.risk || "low",
+  notes: r.notes || "",
+  leaseStart: r.lease_start || "",
+  leaseEnd: r.lease_end || "",
+  lateFee: r.late_fee || 50,
+  autopay: r.autopay || false,
+  history: r.history || [],
+  payments: r.payments || [],
+  maintenance: r.maintenance || [],
+  docs: r.docs || [],
+});
 
-const SEED_EXPENSES = [
-  { id: 1, cat: "Mortgage", amount: 2200, date: "Mar 1", note: "Monthly mortgage", recurring: true },
-  { id: 2, cat: "Insurance", amount: 180, date: "Mar 1", note: "Property insurance", recurring: true },
-  { id: 3, cat: "Repairs", amount: 320, date: "Mar 5", note: "Fix plumbing Unit 1A", recurring: false },
-  { id: 4, cat: "Property Tax", amount: 410, date: "Mar 15", note: "Q1 property tax", recurring: false },
-];
+// helper: map app tenant → DB row shape
+const tenantToDb = (t, userId) => ({
+  user_id: userId,
+  name: t.name,
+  unit: t.unit,
+  housing_type: t.housingType,
+  address: t.address,
+  rent: t.rent,
+  due_day: t.dueDay,
+  email: t.email,
+  phone: t.phone,
+  paid: t.paid,
+  streak: t.streak,
+  risk: t.risk,
+  notes: t.notes,
+  lease_start: t.leaseStart,
+  lease_end: t.leaseEnd,
+  late_fee: t.lateFee,
+  autopay: t.autopay,
+  history: t.history,
+  payments: t.payments,
+  maintenance: t.maintenance,
+  docs: t.docs,
+});
 
 // ── PRIMITIVES ───────────────────────────────────────────────────────────────
 function Av({ name, size = 40 }) {
@@ -301,8 +292,8 @@ function InvoiceReceiptModal({ tenant, type, lastPayment, onLogPayment, onClose 
         ? `Write a professional rent invoice/payment request email. Tenant: ${tenant.name}, ${ht(tenant.housingType).l} Unit ${tenant.unit}, ${tenant.address}. Amount due: $${tenant.rent}. Due: ${tenant.dueDay}th March 2026. Payment method: ${m}. Risk level: ${tenant.risk}. Sign off as "Your Property Manager – RentMind". Plain text, under 120 words.`
         : `Write a professional rent receipt email confirming payment. Tenant: ${tenant.name}, ${ht(tenant.housingType).l} Unit ${tenant.unit}, ${tenant.address}. Amount paid: $${lastPayment?.amount || tenant.rent}. Method: ${m}. Date: ${lastPayment?.date || "March 2026"}. Period: March 2026. Next due: April ${tenant.dueDay}. Sign off as "Your Property Manager – RentMind". Plain text, under 120 words.`;
       try {
-        const r = await fetch("/api/chat", {
-          method: "POST", headers: { "Content-Type": "application/json" },
+        const r = await fetch("https://api.anthropic.com/v1/messages", {
+          method: "POST", headers: { "Content-Type": "application/json", "x-api-key": process.env.REACT_APP_ANTHROPIC_KEY, "anthropic-version": "2023-06-01", "anthropic-dangerous-allow-browser": "true" },
           body: JSON.stringify({ model: "claude-sonnet-4-20250514", max_tokens: 600, system: "You write concise, professional rental payment emails. Plain text only. No markdown.", messages: [{ role: "user", content: prompt }] })
         });
         const d = await r.json();
@@ -633,7 +624,7 @@ function AIChat({ tenants, expenses, onClose }) {
     const next = [...msgs, { role: "user", text: txt }];
     setMsgs(next); setLoading(true);
     try {
-      const r = await fetch("/api/chat", {
+      const r = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST", headers: { "Content-Type": "application/json", "x-api-key": process.env.REACT_APP_ANTHROPIC_KEY, "anthropic-version": "2023-06-01", "anthropic-dangerous-allow-browser": "true" },
         body: JSON.stringify({ model: "claude-sonnet-4-20250514", max_tokens: 1000, system: `RentMind AI for a small landlord. Date: March 10, 2026.\n${ctx}\nBe concise and practical.`, messages: next.slice(1).map(m => ({ role: m.role, content: m.text })) })
       });
@@ -709,7 +700,7 @@ function Paywall({ onSubscribe, onClose }) {
                 {p.features.map((f, i) => <div key={i} style={{ color: C.sub, fontSize: 11, display: "flex", gap: 6 }}><span style={{ color: C.green }}>✓</span>{f}</div>)}
               </div>
               {p.id !== "starter" && (
-                <Btn v={p.popular ? "primary" : "ghost"} full sz="sm" disabled={loading === p.id} onClick={() => window.open(p.id === 'pro' ? 'https://buy.stripe.com/test_9B600l4zw4Wh1jrcCo6sw00' : 'https://buy.stripe.com/test_28E9AV7LIfAVgel31O6sw01', '_blank')}>
+                <Btn v={p.popular ? "primary" : "ghost"} full sz="sm" disabled={loading === p.id} onClick={() => { setLoading(p.id); setTimeout(() => { onSubscribe(p); setLoading(null); }, 1500); }}>
                   {loading === p.id ? "Processing..." : `Get ${p.name} — $${p.price}/mo`}
                 </Btn>
               )}
@@ -726,16 +717,32 @@ function Paywall({ onSubscribe, onClose }) {
 // ── MAIN APP ──────────────────────────────────────────────────────────────────
 const FREE_LIMIT = 2;
 
-export default function RentMind() {
-  const [tenants, setTenants] = useState(SEED);
-  const [expenses, setExpenses] = useState(SEED_EXPENSES);
+export default function RentMind({ session }) {
+  const [tenants, setTenants] = useState([]);
+  const [expenses, setExpenses] = useState([]);
   const [tab, setTab] = useState("dashboard");
   const [plan, setPlan] = useState("starter");
   const [modal, setModal] = useState(null);
   const [toast, setToast] = useState(null);
   const [mainFilter, setMainFilter] = useState("all");
-  const [showPrivacy, setShowPrivacy] = useState(false);
-const [showTerms, setShowTerms] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const userId = session?.user?.id;
+
+  // Load data from Supabase on mount
+  useEffect(() => {
+    if (!userId) return;
+    const loadData = async () => {
+      setLoading(true);
+      const [{ data: tData }, { data: eData }] = await Promise.all([
+        supabase.from("tenants").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
+        supabase.from("expenses").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
+      ]);
+      if (tData) setTenants(tData.map(dbToTenant));
+      if (eData) setExpenses(eData);
+      setLoading(false);
+    };
+    loadData();
+  }, [userId]);
 
   const open = (type, data = null) => setModal({ type, data });
   const close = () => setModal(null);
@@ -755,23 +762,49 @@ const [showTerms, setShowTerms] = useState(false);
 
   const canAdd = plan !== "starter" || tenants.length < FREE_LIMIT;
 
-  const saveTenant = (t) => {
-    if (tenants.find(x => x.id === t.id)) { setTenants(p => p.map(x => x.id === t.id ? { ...x, ...t } : x)); notify("✓ Saved", C.accent); }
-    else { setTenants(p => [...p, t]); notify("✓ Tenant added!", C.green); }
+  const saveTenant = async (t) => {
+    if (t.id && tenants.find(x => x.id === t.id)) {
+      const { error } = await supabase.from("tenants").update(tenantToDb(t, userId)).eq("id", t.id);
+      if (!error) { setTenants(p => p.map(x => x.id === t.id ? { ...x, ...t } : x)); notify("✓ Saved", C.accent); }
+      else notify("Error saving", C.red);
+    } else {
+      const { data, error } = await supabase.from("tenants").insert(tenantToDb({ ...t, paid: false, streak: 0, risk: "low", history: [], payments: [], maintenance: [], docs: [] }, userId)).select().single();
+      if (!error && data) { setTenants(p => [dbToTenant(data), ...p]); notify("✓ Tenant added!", C.green); }
+      else notify("Error adding tenant", C.red);
+    }
     close();
   };
 
-  const deleteTenant = (id) => { setTenants(p => p.filter(t => t.id !== id)); close(); notify("Removed", C.red); };
-
-  const logPayment = (tenant, payment) => {
-    setTenants(p => p.map(t => t.id === tenant.id ? { ...t, paid: true, lastPaid: payment.date, streak: t.streak + 1, payments: [payment, ...(t.payments || [])], history: [true, ...t.history].slice(0, 6) } : t));
+  const deleteTenant = async (id) => {
+    const { error } = await supabase.from("tenants").delete().eq("id", id);
+    if (!error) { setTenants(p => p.filter(t => t.id !== id)); notify("Removed", C.red); }
     close();
-    notify("💰 Payment logged!", C.green);
   };
 
-  const updateLease = (tenant, data) => { setTenants(p => p.map(t => t.id === tenant.id ? { ...t, ...data } : t)); notify("📋 Lease updated", C.accent); };
-  const addMaintenance = (tenant, req) => { setTenants(p => p.map(t => t.id === tenant.id ? { ...t, maintenance: [req, ...(t.maintenance || [])] } : t)); notify("🔧 Request submitted", C.orange); };
-  const addExpense = (exp) => { setExpenses(p => [...p, exp]); notify("💸 Expense logged", C.yellow); };
+  const logPayment = async (tenant, payment) => {
+    const updated = { ...tenant, paid: true, streak: tenant.streak + 1, payments: [payment, ...(tenant.payments || [])], history: [true, ...tenant.history].slice(0, 6) };
+    const { error } = await supabase.from("tenants").update(tenantToDb(updated, userId)).eq("id", tenant.id);
+    if (!error) { setTenants(p => p.map(t => t.id === tenant.id ? updated : t)); notify("💰 Payment logged!", C.green); }
+    close();
+  };
+
+  const updateLease = async (tenant, data) => {
+    const updated = { ...tenant, ...data };
+    const { error } = await supabase.from("tenants").update(tenantToDb(updated, userId)).eq("id", tenant.id);
+    if (!error) { setTenants(p => p.map(t => t.id === tenant.id ? updated : t)); notify("📋 Lease updated", C.accent); }
+  };
+
+  const addMaintenance = async (tenant, req) => {
+    const updated = { ...tenant, maintenance: [req, ...(tenant.maintenance || [])] };
+    const { error } = await supabase.from("tenants").update(tenantToDb(updated, userId)).eq("id", tenant.id);
+    if (!error) { setTenants(p => p.map(t => t.id === tenant.id ? updated : t)); notify("🔧 Request submitted", C.orange); }
+  };
+
+  const addExpense = async (exp) => {
+    const { data, error } = await supabase.from("expenses").insert({ ...exp, user_id: userId }).select().single();
+    if (!error && data) { setExpenses(p => [data, ...p]); notify("💸 Expense logged", C.yellow); }
+    close();
+  };
 
   const TABS = [
     { id: "dashboard", i: "⬡", l: "Home" },
@@ -795,6 +828,13 @@ const [showTerms, setShowTerms] = useState(false);
         <div style={{ color: C.text, fontWeight: 800, fontFamily: "monospace", fontSize: 14 }}>${t.rent}</div>
         <Bdg color={t.paid ? C.green : C.red} xs>{t.paid ? "PAID" : "DUE"}</Bdg>
       </div>
+    </div>
+  );
+
+  if (loading) return (
+    <div style={{ background: C.bg, minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 16 }}>
+      <div style={{ fontSize: 28, fontWeight: 800 }}>Rent<span style={{ color: C.accent }}>Sage</span></div>
+      <div style={{ color: C.sub, fontSize: 13 }}>Loading your properties...</div>
     </div>
   );
 
@@ -1119,11 +1159,11 @@ const [showTerms, setShowTerms] = useState(false);
                 { l: "📧 Email Templates", sub: "Customize your messages" },
                 { l: "💳 Billing & Subscription", sub: plan === "starter" ? "Free plan" : `$${plan === "pro" ? 19 : 49}/mo` },
                 { l: "📄 Document Storage", sub: "Leases, receipts, reports" },
-                { l: "🔒 Privacy Policy", onClick: () => setShowPrivacy(true) },
-                { l: "📋 Terms of Service", onClick: () => setShowTerms(true) },
+                { l: "🔒 Privacy Policy" },
+                { l: "📋 Terms of Service" },
                 { l: "💬 Contact Support" },
               ].map((r, i, arr) => (
-                <div key={i} onClick={r.onClick} style={{ padding: "12px 14px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: i < arr.length - 1 ? `1px solid ${C.border}` : "none", cursor: "pointer" }}>
+                <div key={i} style={{ padding: "12px 14px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: i < arr.length - 1 ? `1px solid ${C.border}` : "none", cursor: "pointer" }}>
                   <div>
                     <div style={{ color: C.sub, fontSize: 13 }}>{r.l}</div>
                     {r.sub && <div style={{ color: C.dim, fontSize: 10, marginTop: 1 }}>{r.sub}</div>}
@@ -1182,8 +1222,7 @@ const [showTerms, setShowTerms] = useState(false);
       {modal?.type === "expense" && <ExpenseModal onClose={close} onSave={addExpense} />}
       {modal?.type === "chat" && <AIChat tenants={tenants} expenses={expenses} onClose={close} />}
       {modal?.type === "paywall" && <Paywall onSubscribe={p => { setPlan(p.id); close(); notify(`🎉 Upgraded to ${p.name}!`, C.accent); }} onClose={close} />}
-{showPrivacy && <PrivacyPolicy onClose={() => setShowPrivacy(false)} />}
-{showTerms && <TermsOfService onClose={() => setShowTerms(false)} />}
+
       {toast && <Toast msg={toast.msg} color={toast.color} onDone={() => setToast(null)} />}
     </div>
   );

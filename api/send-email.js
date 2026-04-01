@@ -13,7 +13,7 @@ export default async function handler(req, res) {
         'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: 'RentSage <support@rentsage.ca>',
+      from: 'RentSage <onboarding@resend.dev>',  
         to,
         subject,
         html,

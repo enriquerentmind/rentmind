@@ -1,5 +1,6 @@
 /* eslint-disable */
 import { supabase } from "./supabase";
+import { PrivacyPolicy, TermsOfService } from "./Legal";
 import { useState, useEffect, useRef } from "react";
 
 // ── THEME ────────────────────────────────────────────────────────────────────
@@ -292,7 +293,7 @@ function InvoiceReceiptModal({ tenant, type, lastPayment, onLogPayment, onClose 
         ? `Write a professional rent invoice/payment request email. Tenant: ${tenant.name}, ${ht(tenant.housingType).l} Unit ${tenant.unit}, ${tenant.address}. Amount due: $${tenant.rent}. Due: ${tenant.dueDay}th March 2026. Payment method: ${m}. Risk level: ${tenant.risk}. Sign off as "Your Property Manager – RentMind". Plain text, under 120 words.`
         : `Write a professional rent receipt email confirming payment. Tenant: ${tenant.name}, ${ht(tenant.housingType).l} Unit ${tenant.unit}, ${tenant.address}. Amount paid: $${lastPayment?.amount || tenant.rent}. Method: ${m}. Date: ${lastPayment?.date || "March 2026"}. Period: March 2026. Next due: April ${tenant.dueDay}. Sign off as "Your Property Manager – RentMind". Plain text, under 120 words.`;
       try {
-        const r = await fetch("https://api.anthropic.com/v1/messages", {
+        const r = await fetch("/api/chat", {
           method: "POST", headers: { "Content-Type": "application/json", "x-api-key": process.env.REACT_APP_ANTHROPIC_KEY, "anthropic-version": "2023-06-01", "anthropic-dangerous-allow-browser": "true" },
           body: JSON.stringify({ model: "claude-sonnet-4-20250514", max_tokens: 600, system: "You write concise, professional rental payment emails. Plain text only. No markdown.", messages: [{ role: "user", content: prompt }] })
         });
@@ -624,7 +625,7 @@ function AIChat({ tenants, expenses, onClose }) {
     const next = [...msgs, { role: "user", text: txt }];
     setMsgs(next); setLoading(true);
     try {
-      const r = await fetch("https://api.anthropic.com/v1/messages", {
+      const r = await fetch("/api/chat", {
         method: "POST", headers: { "Content-Type": "application/json", "x-api-key": process.env.REACT_APP_ANTHROPIC_KEY, "anthropic-version": "2023-06-01", "anthropic-dangerous-allow-browser": "true" },
         body: JSON.stringify({ model: "claude-sonnet-4-20250514", max_tokens: 1000, system: `RentMind AI for a small landlord. Date: March 10, 2026.\n${ctx}\nBe concise and practical.`, messages: next.slice(1).map(m => ({ role: m.role, content: m.text })) })
       });
@@ -700,7 +701,7 @@ function Paywall({ onSubscribe, onClose }) {
                 {p.features.map((f, i) => <div key={i} style={{ color: C.sub, fontSize: 11, display: "flex", gap: 6 }}><span style={{ color: C.green }}>✓</span>{f}</div>)}
               </div>
               {p.id !== "starter" && (
-                <Btn v={p.popular ? "primary" : "ghost"} full sz="sm" disabled={loading === p.id} onClick={() => { setLoading(p.id); setTimeout(() => { onSubscribe(p); setLoading(null); }, 1500); }}>
+                <Btn v={p.popular ? "primary" : "ghost"} full sz="sm" disabled={loading === p.id} onClick={() => { setLoading(p.id); setTimeout(() => { window.open(p.id === 'pro' ? 'https://buy.stripe.com/test_9B600l4zw4Wh1jrcCo6sw00' : 'https://buy.stripe.com/test_28E9AV7LIfAVgel31O6sw01', '_blank'); }}>
                   {loading === p.id ? "Processing..." : `Get ${p.name} — $${p.price}/mo`}
                 </Btn>
               )}
@@ -725,6 +726,8 @@ export default function RentMind({ session }) {
   const [modal, setModal] = useState(null);
   const [toast, setToast] = useState(null);
   const [mainFilter, setMainFilter] = useState("all");
+  const [showPrivacy, setShowPrivacy] = useState(false);
+  const [showTerms, setShowTerms] = useState(false);
   const [loading, setLoading] = useState(true);
   const userId = session?.user?.id;
 
@@ -1159,11 +1162,11 @@ export default function RentMind({ session }) {
                 { l: "📧 Email Templates", sub: "Customize your messages" },
                 { l: "💳 Billing & Subscription", sub: plan === "starter" ? "Free plan" : `$${plan === "pro" ? 19 : 49}/mo` },
                 { l: "📄 Document Storage", sub: "Leases, receipts, reports" },
-                { l: "🔒 Privacy Policy" },
-                { l: "📋 Terms of Service" },
-                { l: "💬 Contact Support" },
+                { l: "🔒 Privacy Policy", onClick: () => setShowPrivacy(true) },
+                { l: "📋 Terms of Service", onClick: () => setShowTerms(true) },
+                { l: "💬 Contact Support", onClick: () => window.open("mailto:support@rentsage.ca") },
               ].map((r, i, arr) => (
-                <div key={i} style={{ padding: "12px 14px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: i < arr.length - 1 ? `1px solid ${C.border}` : "none", cursor: "pointer" }}>
+                <div key={i} onClick={r.onClick} style={{ padding: "12px 14px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: i < arr.length - 1 ? `1px solid ${C.border}` : "none", cursor: "pointer" }}>
                   <div>
                     <div style={{ color: C.sub, fontSize: 13 }}>{r.l}</div>
                     {r.sub && <div style={{ color: C.dim, fontSize: 10, marginTop: 1 }}>{r.sub}</div>}
@@ -1223,6 +1226,8 @@ export default function RentMind({ session }) {
       {modal?.type === "chat" && <AIChat tenants={tenants} expenses={expenses} onClose={close} />}
       {modal?.type === "paywall" && <Paywall onSubscribe={p => { setPlan(p.id); close(); notify(`🎉 Upgraded to ${p.name}!`, C.accent); }} onClose={close} />}
 
+      {showPrivacy && <PrivacyPolicy onClose={() => setShowPrivacy(false)} />}
+      {showTerms && <TermsOfService onClose={() => setShowTerms(false)} />}
       {toast && <Toast msg={toast.msg} color={toast.color} onDone={() => setToast(null)} />}
     </div>
   );

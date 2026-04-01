@@ -292,7 +292,7 @@ function InvoiceReceiptModal({ tenant, type, lastPayment, onLogPayment, onClose 
         ? `Write a professional rent invoice/payment request email. Tenant: ${tenant.name}, ${ht(tenant.housingType).l} Unit ${tenant.unit}, ${tenant.address}. Amount due: $${tenant.rent}. Due: ${tenant.dueDay}th March 2026. Payment method: ${m}. Risk level: ${tenant.risk}. Sign off as "Your Property Manager – RentMind". Plain text, under 120 words.`
         : `Write a professional rent receipt email confirming payment. Tenant: ${tenant.name}, ${ht(tenant.housingType).l} Unit ${tenant.unit}, ${tenant.address}. Amount paid: $${lastPayment?.amount || tenant.rent}. Method: ${m}. Date: ${lastPayment?.date || "March 2026"}. Period: March 2026. Next due: April ${tenant.dueDay}. Sign off as "Your Property Manager – RentMind". Plain text, under 120 words.`;
       try {
-        const r = await fetch("/api/chat", {
+        const r = await fetch("https://api.anthropic.com/v1/messages", {
           method: "POST", headers: { "Content-Type": "application/json", "x-api-key": process.env.REACT_APP_ANTHROPIC_KEY, "anthropic-version": "2023-06-01", "anthropic-dangerous-allow-browser": "true" },
           body: JSON.stringify({ model: "claude-sonnet-4-20250514", max_tokens: 600, system: "You write concise, professional rental payment emails. Plain text only. No markdown.", messages: [{ role: "user", content: prompt }] })
         });
@@ -324,7 +324,7 @@ function InvoiceReceiptModal({ tenant, type, lastPayment, onLogPayment, onClose 
         <div style={{ color: C.sub, fontSize: 12 }}>A receipt will be emailed to</div>
         <div style={{ color: C.accent, fontWeight: 700, fontSize: 13, marginTop: 2 }}>{tenant.email}</div>
       </div>
-      <Btn v="success" full sz="lg" onClick={() => { onLogPayment({ amount: +amount, method: PAY_METHODS.find(p => p.v === method)?.l, date, late: false }); setSent(true); }}>✓ Confirm & Email Receipt</Btn>
+      <Btn v="success" full sz="lg" onClick={() => { onLogPayment({ amount: +amount, method: PAY_METHODS.find(p => p.v === method)?.l, date, late: false }); fetch('/api/send-email', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ to: tenant.email, subject: type === 'invoice' ? `Rent Invoice - ${tenant.unit}` : `Payment Receipt - ${tenant.unit}`, html: `<div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#060A12;color:#F0F8FF;border-radius:12px"><h2 style="color:#38BDF8">RentSage</h2><pre style="white-space:pre-wrap;font-family:sans-serif">${text}</pre><hr style="border-color:#1A2D45"><p style="color:#7A97BC;font-size:12px">© 2026 RentSage · rentsage.ca</p></div>` }) }); setSent(true); }}>✓ Confirm & Email Receipt</Btn>
     </Sheet>
   );
 
@@ -624,7 +624,7 @@ function AIChat({ tenants, expenses, onClose }) {
     const next = [...msgs, { role: "user", text: txt }];
     setMsgs(next); setLoading(true);
     try {
-      const r = await fetch("/api/chat", {
+      const r = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST", headers: { "Content-Type": "application/json", "x-api-key": process.env.REACT_APP_ANTHROPIC_KEY, "anthropic-version": "2023-06-01", "anthropic-dangerous-allow-browser": "true" },
         body: JSON.stringify({ model: "claude-sonnet-4-20250514", max_tokens: 1000, system: `RentMind AI for a small landlord. Date: March 10, 2026.\n${ctx}\nBe concise and practical.`, messages: next.slice(1).map(m => ({ role: m.role, content: m.text })) })
       });

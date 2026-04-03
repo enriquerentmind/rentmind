@@ -277,24 +277,37 @@ function LeaseModal({ tenant, onClose, onSave }) {
 }
 
 // ── INVOICE + RECEIPT MODAL ───────────────────────────────────────────────────
-function InvoiceReceiptModal({ tenant, type, lastPayment, onLogPayment, onClose }) {
+function InvoiceReceiptModal({ tenant, type, lastPayment, onLogPayment, onClose, templates = DEFAULT_TEMPLATES }) {
   const [method, setMethod] = useState("etransfer");
   const [amount, setAmount] = useState(String(tenant.rent));
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(true);
   const [sent, setSent] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [sendError, setSendError] = useState("");
   const [step, setStep] = useState(type === "invoice" ? "invoice" : "receipt");
+
+  const sendEmail = async (subject, html) => {
+    setSending(true);
+    setSendError("");
+    try {
+      const res = await fetch('/api/send-email', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ to: tenant.email, subject, html }) });
+      const data = await res.json();
+      if (!res.ok || data.error) { setSendError(data.error?.message || data.error || "Failed to send email. Try again."); setSending(false); return false; }
+      return true;
+    } catch { setSendError("Network error. Please try again."); setSending(false); return false; }
+  };
 
   useEffect(() => {
     const generate = async () => {
       const m = PAY_METHODS.find(p => p.v === method)?.l || "e-Transfer";
       const prompt = type === "invoice"
-        ? `Write a professional rent invoice/payment request email. Tenant: ${tenant.name}, ${ht(tenant.housingType).l} Unit ${tenant.unit}, ${tenant.address}. Amount due: $${tenant.rent}. Due: ${tenant.dueDay}th March 2026. Payment method: ${m}. Risk level: ${tenant.risk}. Sign off as "Your Property Manager – RentMind". Plain text, under 120 words.`
-        : `Write a professional rent receipt email confirming payment. Tenant: ${tenant.name}, ${ht(tenant.housingType).l} Unit ${tenant.unit}, ${tenant.address}. Amount paid: $${lastPayment?.amount || tenant.rent}. Method: ${m}. Date: ${lastPayment?.date || "March 2026"}. Period: March 2026. Next due: April ${tenant.dueDay}. Sign off as "Your Property Manager – RentMind". Plain text, under 120 words.`;
+        ? `${templates.invoiceInstructions} Tenant: ${tenant.name}, ${ht(tenant.housingType).l} Unit ${tenant.unit}, ${tenant.address}. Amount due: $${tenant.rent}. Due: ${tenant.dueDay}th ${new Date().toLocaleDateString('en-CA', { month: 'long', year: 'numeric' })}. Payment method: ${m}. Risk level: ${tenant.risk}. Sign off as "${templates.signoff}".`
+        : `${templates.receiptInstructions} Tenant: ${tenant.name}, ${ht(tenant.housingType).l} Unit ${tenant.unit}, ${tenant.address}. Amount paid: $${lastPayment?.amount || tenant.rent}. Method: ${m}. Date: ${lastPayment?.date || new Date().toISOString().split('T')[0]}. Period: ${new Date().toLocaleDateString('en-CA', { month: 'long', year: 'numeric' })}. Next due: ${new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1).toLocaleDateString('en-CA', { month: 'long' })} ${tenant.dueDay}. Sign off as "${templates.signoff}".`;
       try {
         const r = await fetch("/api/chat", {
-          method: "POST", headers: { "Content-Type": "application/json", "x-api-key": process.env.REACT_APP_ANTHROPIC_KEY, "anthropic-version": "2023-06-01", "anthropic-dangerous-allow-browser": "true" },
+          method: "POST", headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ model: "claude-sonnet-4-20250514", max_tokens: 600, system: "You write concise, professional rental payment emails. Plain text only. No markdown.", messages: [{ role: "user", content: prompt }] })
         });
         const d = await r.json();
@@ -325,7 +338,14 @@ function InvoiceReceiptModal({ tenant, type, lastPayment, onLogPayment, onClose 
         <div style={{ color: C.sub, fontSize: 12 }}>A receipt will be emailed to</div>
         <div style={{ color: C.accent, fontWeight: 700, fontSize: 13, marginTop: 2 }}>{tenant.email}</div>
       </div>
-      <Btn v="success" full sz="lg" onClick={() => { onLogPayment({ amount: +amount, method: PAY_METHODS.find(p => p.v === method)?.l, date, late: false }); fetch('/api/send-email', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ to: tenant.email, subject: type === 'invoice' ? `Rent Invoice - ${tenant.unit}` : `Payment Receipt - ${tenant.unit}`, html: `<div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#060A12;color:#F0F8FF;border-radius:12px"><h2 style="color:#38BDF8">RentSage</h2><pre style="white-space:pre-wrap;font-family:sans-serif">${text}</pre><hr style="border-color:#1A2D45"><p style="color:#7A97BC;font-size:12px">© 2026 RentSage · rentsage.ca</p></div>` }) }); setSent(true); }}>✓ Confirm & Email Receipt</Btn>
+      {sendError && <div style={{ color: C.red, fontSize: 11, marginBottom: 8, padding: "8px 12px", background: C.redGl, borderRadius: 8, border: `1px solid ${C.red}30` }}>{sendError}</div>}
+      <Btn v="success" full sz="lg" disabled={sending} onClick={async () => {
+        const payment = { amount: +amount, method: PAY_METHODS.find(p => p.v === method)?.l, date, late: false };
+        const subject = type === 'invoice' ? `Rent Invoice - ${tenant.unit}` : `Payment Receipt - ${tenant.unit}`;
+        const html = `<div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#060A12;color:#F0F8FF;border-radius:12px"><h2 style="color:#38BDF8">RentSage</h2><pre style="white-space:pre-wrap;font-family:sans-serif">${text}</pre><hr style="border-color:#1A2D45"><p style="color:#7A97BC;font-size:12px">© 2026 RentSage · rentsage.ca</p></div>`;
+        const ok = await sendEmail(subject, html);
+        if (ok) { onLogPayment(payment); setSent(true); }
+      }}>{sending ? "Sending..." : "✓ Confirm & Email Receipt"}</Btn>
     </Sheet>
   );
 
@@ -347,10 +367,16 @@ function InvoiceReceiptModal({ tenant, type, lastPayment, onLogPayment, onClose 
         </div>
         <textarea value={loading ? "Generating..." : text} onChange={e => setText(e.target.value)} rows={9} style={{ width: "100%", background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, padding: "11px 13px", color: loading ? C.dim : C.text, fontSize: 12, outline: "none", resize: "vertical", fontFamily: "monospace", lineHeight: 1.7, boxSizing: "border-box" }} />
       </div>
+      {sendError && <div style={{ color: C.red, fontSize: 11, marginBottom: 8, padding: "8px 12px", background: C.redGl, borderRadius: 8, border: `1px solid ${C.red}30` }}>{sendError}</div>}
       <div style={{ display: "flex", gap: 8 }}>
         <Btn v="muted" full onClick={onClose}>Cancel</Btn>
         {type === "invoice" && <Btn v="ghost" full onClick={() => setStep("log")}>💰 Log Payment</Btn>}
-        <Btn v="primary" full disabled={loading} onClick={async () => { await fetch('/api/send-email', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ to: tenant.email, subject: 'RentSage - ' + (type === 'invoice' ? 'Invoice' : 'Receipt') + ' for Unit ' + tenant.unit, html: '<div style="font-family:sans-serif;padding:20px"><h2>RentSage</h2><p>Hi ' + tenant.name + ',</p><p>' + (type === 'invoice' ? 'Your rent of $' + tenant.rent + ' is due.' : 'Payment of $' + tenant.rent + ' received. Thank you!') + '</p></div>' }) }); setSent(true); }}>📧 Send</Btn>
+        <Btn v="primary" full disabled={loading || sending} onClick={async () => {
+          const subject = 'RentSage - ' + (type === 'invoice' ? 'Invoice' : 'Receipt') + ' for Unit ' + tenant.unit;
+          const html = `<div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#060A12;color:#F0F8FF;border-radius:12px"><h2 style="color:#38BDF8">RentSage</h2><pre style="white-space:pre-wrap;font-family:sans-serif">${text}</pre><hr style="border-color:#1A2D45"><p style="color:#7A97BC;font-size:12px">© 2026 RentSage · rentsage.ca</p></div>`;
+          const ok = await sendEmail(subject, html);
+          if (ok) setSent(true);
+        }}>{sending ? "Sending..." : "📧 Send"}</Btn>
       </div>
     </Sheet>
   );
@@ -427,7 +453,7 @@ function Err({ children }) {
 }
 
 // ── TENANT DETAIL ─────────────────────────────────────────────────────────────
-function TenantDetail({ tenant, onClose, onEdit, onDelete, onInvoice, onReceipt, onMaintenance, onLease, onLogPayment }) {
+function TenantDetail({ tenant, onClose, onEdit, onDelete, onInvoice, onReceipt, onMaintenance, onLease, onLogPayment, onUploadDoc }) {
   const [activeTab, setActiveTab] = useState("overview");
   const rate = tenant.history.length ? Math.round(tenant.history.filter(Boolean).length / tenant.history.length * 100) : 100;
   const h = ht(tenant.housingType);
@@ -586,7 +612,8 @@ function TenantDetail({ tenant, onClose, onEdit, onDelete, onInvoice, onReceipt,
 
       {activeTab === "docs" && (
         <>
-          <Btn v="ghost" full style={{ marginBottom: 12 }} onClick={() => {}}>⬆️ Upload Document</Btn>
+          <input type="file" id="doc-upload" style={{ display: "none" }} onChange={e => { const f = e.target.files?.[0]; if (f) onUploadDoc(tenant, f); e.target.value = ""; }} />
+          <Btn v="ghost" full style={{ marginBottom: 12 }} onClick={() => document.getElementById("doc-upload").click()}>⬆️ Upload Document</Btn>
           {tenant.docs?.length > 0 ? (
             <Card style={{ overflow: "hidden" }}>
               {tenant.docs.map((d, i) => (
@@ -596,7 +623,7 @@ function TenantDetail({ tenant, onClose, onEdit, onDelete, onInvoice, onReceipt,
                     <div style={{ color: C.text, fontSize: 13 }}>{d.name}</div>
                     <div style={{ color: C.sub, fontSize: 11 }}>{d.date}</div>
                   </div>
-                  <Btn v="ghost" sz="sm">View</Btn>
+                  <Btn v="ghost" sz="sm" onClick={() => window.open(d.url, '_blank')}>View</Btn>
                 </div>
               ))}
             </Card>
@@ -626,8 +653,8 @@ function AIChat({ tenants, expenses, onClose }) {
     setMsgs(next); setLoading(true);
     try {
       const r = await fetch("/api/chat", {
-        method: "POST", headers: { "Content-Type": "application/json", "x-api-key": process.env.REACT_APP_ANTHROPIC_KEY, "anthropic-version": "2023-06-01", "anthropic-dangerous-allow-browser": "true" },
-        body: JSON.stringify({ model: "claude-sonnet-4-20250514", max_tokens: 1000, system: `RentMind AI for a small landlord. Date: March 10, 2026.\n${ctx}\nBe concise and practical.`, messages: next.slice(1).map(m => ({ role: m.role, content: m.text })) })
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ model: "claude-sonnet-4-20250514", max_tokens: 1000, system: `RentMind AI for a small landlord. Date: ${new Date().toLocaleDateString('en-CA', { year: 'numeric', month: 'long', day: 'numeric' })}.\n${ctx}\nBe concise and practical.`, messages: next.slice(1).map(m => ({ role: m.role, content: m.text })) })
       });
       const d = await r.json();
       setMsgs(p => [...p, { role: "assistant", text: d.content?.[0]?.text || "Sorry, try again." }]);
@@ -667,6 +694,63 @@ function AIChat({ tenants, expenses, onClose }) {
         </div>
       </div>
     </div>
+  );
+}
+
+// ── NOTIFICATION SETTINGS ─────────────────────────────────────────────────────
+const DEFAULT_NOTIF = { latePayment: true, leaseExpiry60: true, leaseExpiry30: true, newMaintenance: true };
+
+function NotificationsModal({ onClose }) {
+  const [prefs, setPrefs] = useState(() => {
+    try { return { ...DEFAULT_NOTIF, ...JSON.parse(localStorage.getItem("rentsage_notif") || "{}") }; } catch { return DEFAULT_NOTIF; }
+  });
+  const toggle = k => setPrefs(p => ({ ...p, [k]: !p[k] }));
+  const save = () => { localStorage.setItem("rentsage_notif", JSON.stringify(prefs)); onClose(); };
+  const rows = [
+    { k: "latePayment", l: "Late payment alerts", sub: "Notify when rent is overdue" },
+    { k: "leaseExpiry60", l: "60-day lease expiry warning", sub: "Reminder when lease ends in 60 days" },
+    { k: "leaseExpiry30", l: "30-day lease expiry warning", sub: "Reminder when lease ends in 30 days" },
+    { k: "newMaintenance", l: "Maintenance request alerts", sub: "Notify on new maintenance submissions" },
+  ];
+  return (
+    <Sheet title="Notification Settings" sub="Choose what alerts you receive" onClose={onClose}>
+      <Card style={{ overflow: "hidden", marginBottom: 16 }}>
+        {rows.map((r, i) => (
+          <div key={r.k} onClick={() => toggle(r.k)} style={{ padding: "13px 14px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: i < rows.length - 1 ? `1px solid ${C.border}` : "none", cursor: "pointer" }}>
+            <div>
+              <div style={{ color: C.text, fontSize: 13 }}>{r.l}</div>
+              <div style={{ color: C.dim, fontSize: 10, marginTop: 1 }}>{r.sub}</div>
+            </div>
+            <div style={{ width: 38, height: 22, borderRadius: 11, background: prefs[r.k] ? C.accent : C.surface, border: `1px solid ${prefs[r.k] ? C.accent : C.border}`, position: "relative", transition: "background .2s", flexShrink: 0 }}>
+              <div style={{ position: "absolute", top: 3, left: prefs[r.k] ? 18 : 3, width: 14, height: 14, borderRadius: "50%", background: prefs[r.k] ? "#060A12" : C.dim, transition: "left .2s" }} />
+            </div>
+          </div>
+        ))}
+      </Card>
+      <Btn v="primary" full sz="lg" onClick={save}>Save Preferences</Btn>
+    </Sheet>
+  );
+}
+
+// ── EMAIL TEMPLATES ────────────────────────────────────────────────────────────
+const DEFAULT_TEMPLATES = {
+  invoiceInstructions: "Write a professional rent invoice/payment request email. Be friendly but firm. Plain text only, under 120 words.",
+  receiptInstructions: "Write a professional rent receipt email confirming payment. Be warm and appreciative. Plain text only, under 120 words.",
+  signoff: "Your Property Manager – RentSage",
+};
+
+function EmailTemplatesModal({ templates, onSave, onClose }) {
+  const [form, setForm] = useState(templates);
+  const f = k => ({ value: form[k], onChange: v => setForm(p => ({ ...p, [k]: v })) });
+  return (
+    <Sheet title="Email Templates" sub="Customize AI-generated messages" onClose={onClose}>
+      <Inp label="INVOICE INSTRUCTIONS" rows={3} placeholder="Instructions for invoice emails..." {...f("invoiceInstructions")} />
+      <Inp label="RECEIPT INSTRUCTIONS" rows={3} placeholder="Instructions for receipt emails..." {...f("receiptInstructions")} />
+      <Inp label="SIGN-OFF NAME" placeholder="Your Property Manager – RentSage" {...f("signoff")} />
+      <div style={{ color: C.dim, fontSize: 10, marginBottom: 14, lineHeight: 1.5 }}>Tenant name, unit, address, amount, and dates are added automatically.</div>
+      <Btn v="primary" full sz="lg" onClick={() => { onSave(form); onClose(); }}>Save Templates</Btn>
+      <Btn v="muted" full style={{ marginTop: 8 }} onClick={() => { onSave(DEFAULT_TEMPLATES); onClose(); }}>Reset to Defaults</Btn>
+    </Sheet>
   );
 }
 
@@ -728,6 +812,11 @@ export default function RentMind({ session }) {
   const [mainFilter, setMainFilter] = useState("all");
   const [showPrivacy, setShowPrivacy] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [showEmailTemplates, setShowEmailTemplates] = useState(false);
+  const [emailTemplates, setEmailTemplates] = useState(() => {
+    try { return { ...DEFAULT_TEMPLATES, ...JSON.parse(localStorage.getItem("rentsage_templates") || "{}") }; } catch { return DEFAULT_TEMPLATES; }
+  });
   const [loading, setLoading] = useState(true);
   const userId = session?.user?.id;
 
@@ -784,8 +873,18 @@ export default function RentMind({ session }) {
     close();
   };
 
+  const calcRisk = (history, streak) => {
+    const lateCount = history.filter(v => v === false).length;
+    if (lateCount >= 2) return "high";
+    if (lateCount === 1 || streak === 0) return "medium";
+    return "low";
+  };
+
   const logPayment = async (tenant, payment) => {
-    const updated = { ...tenant, paid: true, streak: tenant.streak + 1, payments: [payment, ...(tenant.payments || [])], history: [true, ...tenant.history].slice(0, 6) };
+    const newHistory = [!payment.late, ...tenant.history].slice(0, 6);
+    const newStreak = payment.late ? 0 : tenant.streak + 1;
+    const newRisk = calcRisk(newHistory, newStreak);
+    const updated = { ...tenant, paid: true, streak: newStreak, risk: newRisk, payments: [payment, ...(tenant.payments || [])], history: newHistory };
     const { error } = await supabase.from("tenants").update(tenantToDb(updated, userId)).eq("id", tenant.id);
     if (!error) { setTenants(p => p.map(t => t.id === tenant.id ? updated : t)); notify("💰 Payment logged!", C.green); }
     close();
@@ -801,6 +900,18 @@ export default function RentMind({ session }) {
     const updated = { ...tenant, maintenance: [req, ...(tenant.maintenance || [])] };
     const { error } = await supabase.from("tenants").update(tenantToDb(updated, userId)).eq("id", tenant.id);
     if (!error) { setTenants(p => p.map(t => t.id === tenant.id ? updated : t)); notify("🔧 Request submitted", C.orange); }
+  };
+
+  const uploadDoc = async (tenant, file) => {
+    const path = `${userId}/${tenant.id}/${Date.now()}_${file.name}`;
+    const { error: upErr } = await supabase.storage.from("docs").upload(path, file, { upsert: true });
+    if (upErr) { notify("Upload failed: " + upErr.message, C.red); return; }
+    const { data: { publicUrl } } = supabase.storage.from("docs").getPublicUrl(path);
+    const doc = { name: file.name, date: new Date().toISOString().split("T")[0], url: publicUrl };
+    const updated = { ...tenant, docs: [doc, ...(tenant.docs || [])] };
+    const { error } = await supabase.from("tenants").update(tenantToDb(updated, userId)).eq("id", tenant.id);
+    if (!error) { setTenants(p => p.map(t => t.id === tenant.id ? updated : t)); notify("📄 Document uploaded", C.green); }
+    else notify("Error saving document", C.red);
   };
 
   const addExpense = async (exp) => {
@@ -857,7 +968,7 @@ export default function RentMind({ session }) {
       <div style={{ padding: "20px 18px 0", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div>
           <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: -0.8 }}>Rent<span style={{ color: C.accent }}>Sage</span></div>
-          <div style={{ color: C.dim, fontSize: 10, marginTop: 1 }}>March 2026 · {plan === "starter" ? "Free" : plan === "pro" ? "Pro ⚡" : "Max 🚀"}</div>
+          <div style={{ color: C.dim, fontSize: 10, marginTop: 1 }}>{new Date().toLocaleDateString('en-CA', { month: 'long', year: 'numeric' })} · {plan === "starter" ? "Free" : plan === "pro" ? "Pro ⚡" : "Max 🚀"}</div>
         </div>
         <div style={{ display: "flex", gap: 7 }}>
           <Btn v="ghost" sz="sm" onClick={() => open("chat")}>🤖 AI</Btn>
@@ -1158,9 +1269,9 @@ export default function RentMind({ session }) {
           <Section title="SETTINGS">
             <Card style={{ overflow: "hidden" }}>
               {[
-                { l: "🔔 Notification Settings", sub: "Reminders & alerts" },
-                { l: "📧 Email Templates", sub: "Customize your messages" },
-                { l: "💳 Billing & Subscription", sub: plan === "starter" ? "Free plan" : `$${plan === "pro" ? 19 : 49}/mo` },
+                { l: "🔔 Notification Settings", sub: "Reminders & alerts", onClick: () => setShowNotifications(true) },
+                { l: "📧 Email Templates", sub: "Customize your messages", onClick: () => setShowEmailTemplates(true) },
+                { l: "💳 Billing & Subscription", sub: plan === "starter" ? "Free plan" : `$${plan === "pro" ? 19 : 49}/mo`, onClick: () => plan === "starter" ? open("paywall") : window.open(plan === "pro" ? "https://buy.stripe.com/test_9B600l4zw4Wh1jrcCo6sw00" : "https://buy.stripe.com/test_28E9AV7LIfAVgel31O6sw01", "_blank") },
                 { l: "📄 Document Storage", sub: "Leases, receipts, reports" },
                 { l: "🔒 Privacy Policy", onClick: () => setShowPrivacy(true) },
                 { l: "📋 Terms of Service", onClick: () => setShowTerms(true) },
@@ -1201,6 +1312,7 @@ export default function RentMind({ session }) {
           onLease={t => open("lease", t)}
           onMaintenance={t => open("maintenance", t)}
           onLogPayment={t => open("logpay", t)}
+          onUploadDoc={uploadDoc}
         />
       )}
       {modal?.type === "invoice" && (
@@ -1210,6 +1322,7 @@ export default function RentMind({ session }) {
           lastPayment={modal.data.lastPayment}
           onLogPayment={(payment) => logPayment(modal.data.tenant, payment)}
           onClose={close}
+          templates={emailTemplates}
         />
       )}
       {modal?.type === "logpay" && (
@@ -1218,6 +1331,7 @@ export default function RentMind({ session }) {
           type="invoice"
           onLogPayment={(payment) => logPayment(modal.data, payment)}
           onClose={close}
+          templates={emailTemplates}
         />
       )}
       {modal?.type === "lease" && <LeaseModal tenant={modal.data} onClose={close} onSave={(data) => { updateLease(modal.data, data); close(); }} />}
@@ -1228,6 +1342,8 @@ export default function RentMind({ session }) {
 
       {showPrivacy && <PrivacyPolicy onClose={() => setShowPrivacy(false)} />}
       {showTerms && <TermsOfService onClose={() => setShowTerms(false)} />}
+      {showNotifications && <NotificationsModal onClose={() => setShowNotifications(false)} />}
+      {showEmailTemplates && <EmailTemplatesModal templates={emailTemplates} onSave={t => { setEmailTemplates(t); localStorage.setItem("rentsage_templates", JSON.stringify(t)); }} onClose={() => setShowEmailTemplates(false)} />}
       {toast && <Toast msg={toast.msg} color={toast.color} onDone={() => setToast(null)} />}
     </div>
   );

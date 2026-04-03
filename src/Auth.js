@@ -22,6 +22,8 @@ export default function Auth() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [pendingEmail, setPendingEmail] = useState("");
+  const [resent, setResent] = useState(false);
 
   const handle = async () => {
     setLoading(true);
@@ -29,18 +31,74 @@ export default function Auth() {
     try {
       if (mode === "login") {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) setError(error.message);
+        if (error) {
+          if (error.message.toLowerCase().includes("email not confirmed")) {
+            setPendingEmail(email);
+          } else {
+            setError(error.message);
+          }
+        }
       } else {
-        const { error } = await supabase.auth.signUp({ email, password });
-        if (error) setError(error.message);
-        else setError("✅ Account created! You can now log in.");
+        const { data, error } = await supabase.auth.signUp({ email, password });
+        if (error) {
+          setError(error.message);
+        } else if (data.session) {
+          // Email confirmation disabled in Supabase — user is logged in immediately
+        } else {
+          // Confirmation email sent
+          setPendingEmail(email);
+        }
       }
-    } catch (e) {
+    } catch {
       setError("Something went wrong. Try again.");
     }
     setLoading(false);
   };
 
+  const resendConfirmation = async () => {
+    setResent(false);
+    const { error } = await supabase.auth.resend({ type: "signup", email: pendingEmail });
+    if (!error) setResent(true);
+  };
+
+  // ── Verify email screen ────────────────────────────────────────────────────
+  if (pendingEmail) {
+    return (
+      <div style={{ background: C.bg, minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+        <style>{`@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');*{box-sizing:border-box;margin:0;padding:0}`}</style>
+        <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 20, padding: 32, width: "100%", maxWidth: 400, textAlign: "center" }}>
+          <div style={{ fontSize: 52, marginBottom: 16 }}>📬</div>
+          <div style={{ fontSize: 20, fontWeight: 800, color: C.text, marginBottom: 8 }}>Check your inbox</div>
+          <div style={{ color: C.sub, fontSize: 13, lineHeight: 1.6, marginBottom: 6 }}>
+            We sent a verification link to
+          </div>
+          <div style={{ color: C.accent, fontWeight: 700, fontSize: 14, marginBottom: 20 }}>{pendingEmail}</div>
+          <div style={{ color: C.sub, fontSize: 12, lineHeight: 1.6, marginBottom: 24 }}>
+            Click the link in the email to activate your account. Check your spam folder if you don't see it.
+          </div>
+
+          {resent && (
+            <div style={{ background: `${C.green}18`, border: `1px solid ${C.green}40`, borderRadius: 10, padding: "10px 14px", marginBottom: 16, color: C.green, fontSize: 13 }}>
+              ✅ Verification email resent!
+            </div>
+          )}
+
+          <button onClick={resendConfirmation} style={{ background: "none", border: `1px solid ${C.border}`, borderRadius: 10, padding: "10px 20px", color: C.sub, fontSize: 13, cursor: "pointer", fontFamily: "inherit", marginBottom: 16, width: "100%" }}>
+            Resend verification email
+          </button>
+
+          <div style={{ color: C.dim, fontSize: 12 }}>
+            Wrong email?{" "}
+            <span onClick={() => { setPendingEmail(""); setEmail(""); setPassword(""); setMode("signup"); }} style={{ color: C.accent, cursor: "pointer", fontWeight: 700 }}>
+              Start over
+            </span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Login / Signup screen ──────────────────────────────────────────────────
   return (
     <div style={{ background: C.bg, minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');*{box-sizing:border-box;margin:0;padding:0}`}</style>
@@ -51,7 +109,7 @@ export default function Auth() {
         </div>
 
         {error && (
-          <div style={{ background: error.startsWith("✅") ? `${C.green}18` : `${C.red}18`, border: `1px solid ${error.startsWith("✅") ? C.green : C.red}40`, borderRadius: 10, padding: "10px 14px", marginBottom: 16, color: error.startsWith("✅") ? C.green : C.red, fontSize: 13 }}>
+          <div style={{ background: `${C.red}18`, border: `1px solid ${C.red}40`, borderRadius: 10, padding: "10px 14px", marginBottom: 16, color: C.red, fontSize: 13 }}>
             {error}
           </div>
         )}

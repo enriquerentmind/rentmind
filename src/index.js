@@ -39,6 +39,9 @@ function Root() {
   // Show auth if going to /app or /login without session
   if (!session) return <Auth />;
 
+  // Block access if email not yet confirmed
+  if (!session.user.email_confirmed_at) return <Auth />;
+
   return <App session={session} />;
 }
 

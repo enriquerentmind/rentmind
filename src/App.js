@@ -785,7 +785,7 @@ function Paywall({ onSubscribe, onClose }) {
                 {p.features.map((f, i) => <div key={i} style={{ color: C.sub, fontSize: 11, display: "flex", gap: 6 }}><span style={{ color: C.green }}>✓</span>{f}</div>)}
               </div>
               {p.id !== "starter" && (
-                <Btn v={p.popular ? "primary" : "ghost"} full sz="sm" disabled={loading === p.id} onClick={() => window.open(p.id === 'pro' ? 'https://buy.stripe.com/test_9B600l4zw4Wh1jrcCo6sw00' : 'https://buy.stripe.com/test_28E9AV7LIfAVgel31O6sw01', '_blank')}>
+                <Btn v={p.popular ? "primary" : "ghost"} full sz="sm" disabled={loading === p.id} onClick={() => window.open(p.id === 'pro' ? 'https://buy.stripe.com/14AbJ0ajl9eGbP4fFN8AE00' : 'https://buy.stripe.com/bJe4gyfDF62ucT8fFN8AE01', '_blank')}>
                   {loading === p.id ? "Processing..." : `Get ${p.name} — $${p.price}/mo`}
                 </Btn>
               )}
@@ -1271,7 +1271,7 @@ export default function RentMind({ session }) {
               {[
                 { l: "🔔 Notification Settings", sub: "Reminders & alerts", onClick: () => setShowNotifications(true) },
                 { l: "📧 Email Templates", sub: "Customize your messages", onClick: () => setShowEmailTemplates(true) },
-                { l: "💳 Billing & Subscription", sub: plan === "starter" ? "Free plan" : `$${plan === "pro" ? 19 : 49}/mo`, onClick: () => plan === "starter" ? open("paywall") : window.open(plan === "pro" ? "https://buy.stripe.com/test_9B600l4zw4Wh1jrcCo6sw00" : "https://buy.stripe.com/test_28E9AV7LIfAVgel31O6sw01", "_blank") },
+                { l: "💳 Billing & Subscription", sub: plan === "starter" ? "Free plan" : `$${plan === "pro" ? 19 : 49}/mo`, onClick: () => plan === "starter" ? open("paywall") : window.open(plan === "pro" ? "https://buy.stripe.com/14AbJ0ajl9eGbP4fFN8AE00" : "https://buy.stripe.com/bJe4gyfDF62ucT8fFN8AE01", "_blank") },
                 { l: "📄 Document Storage", sub: "Leases, receipts, reports" },
                 { l: "🔒 Privacy Policy", onClick: () => setShowPrivacy(true) },
                 { l: "📋 Terms of Service", onClick: () => setShowTerms(true) },

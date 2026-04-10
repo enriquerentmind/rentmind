@@ -1275,7 +1275,7 @@ export default function RentMind({ session }) {
                 { l: "📄 Document Storage", sub: "Leases, receipts, reports" },
                 { l: "🔒 Privacy Policy", onClick: () => setShowPrivacy(true) },
                 { l: "📋 Terms of Service", onClick: () => setShowTerms(true) },
-                { l: "💬 Contact Support", onClick: () => window.open("mailto:support@rentsage.ca") },
+                { l: "💬 Contact Support", onClick: () => window.open("mailto:rentsageapp@gmail.com") },
               ].map((r, i, arr) => (
                 <div key={i} onClick={r.onClick} style={{ padding: "12px 14px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: i < arr.length - 1 ? `1px solid ${C.border}` : "none", cursor: "pointer" }}>
                   <div>

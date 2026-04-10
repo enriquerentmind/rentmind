@@ -213,7 +213,7 @@ export default function Landing() {
         <p style={{ color: "#7A97BC", fontSize: 15, marginBottom: 32, lineHeight: 1.6 }}>Have a question or need help? Our support team is ready to assist you.</p>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 32 }}>
           {[
-            { i: "📧", t: "Email Support", d: "support@rentsage.ca", sub: "Reply within 24 hours" },
+            { i: "📧", t: "Email Support", d: "rentsageapp@gmail.com", sub: "Reply within 24 hours" },
             { i: "📚", t: "Help Center", d: "Guides & tutorials", sub: "Coming soon" },
             { i: "🤖", t: "AI Assistant", d: "In-app AI chat", sub: "Available 24/7" },
           ].map((s, i) => (
@@ -225,7 +225,7 @@ export default function Landing() {
             </div>
           ))}
         </div>
-        <a href="mailto:support@rentsage.ca" style={{ background: "#22D3A0", color: "#060A12", padding: "13px 28px", borderRadius: 12, fontWeight: 800, fontSize: 14, textDecoration: "none", display: "inline-block" }}>
+        <a href="mailto:rentsageapp@gmail.com" style={{ background: "#22D3A0", color: "#060A12", padding: "13px 28px", borderRadius: 12, fontWeight: 800, fontSize: 14, textDecoration: "none", display: "inline-block" }}>
           Contact Support →
         </a>
       </div>

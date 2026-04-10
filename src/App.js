@@ -558,7 +558,7 @@ function TenantDetail({ tenant, onClose, onEdit, onDelete, onInvoice, onReceipt,
           </div>
           <div style={{ display: "flex", gap: 7 }}>
             <Btn v="muted" full onClick={() => onEdit(tenant)}>✏️ Edit</Btn>
-            <Btn v="danger" onClick={() => onDelete(tenant.id)}>🗑</Btn>
+            <Btn v="danger" onClick={() => { if (window.confirm(`Remove ${tenant.name}? This cannot be undone.`)) onDelete(tenant.id); }}>🗑</Btn>
           </div>
         </>
       )}
@@ -636,7 +636,7 @@ function TenantDetail({ tenant, onClose, onEdit, onDelete, onInvoice, onReceipt,
 
 // ── AI CHAT ───────────────────────────────────────────────────────────────────
 function AIChat({ tenants, expenses, onClose }) {
-  const [msgs, setMsgs] = useState([{ role: "assistant", text: "Hi! I'm RentMind AI. I know all your properties, tenants, payments, and expenses. Ask me anything." }]);
+  const [msgs, setMsgs] = useState([{ role: "assistant", text: "Hi! I'm RentSage AI. I know all your properties, tenants, payments, and expenses. Ask me anything." }]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const ref = useRef();
@@ -672,7 +672,7 @@ function AIChat({ tenants, expenses, onClose }) {
           <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
             <div style={{ width: 34, height: 34, borderRadius: 10, background: C.accentGl, border: `1px solid ${C.accent}35`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>🤖</div>
             <div>
-              <div style={{ color: C.text, fontWeight: 700, fontSize: 13 }}>RentMind AI</div>
+              <div style={{ color: C.text, fontWeight: 700, fontSize: 13 }}>RentSage AI</div>
               <div style={{ color: C.green, fontSize: 10, display: "flex", gap: 4, alignItems: "center" }}><div style={{ width: 5, height: 5, borderRadius: "50%", background: C.green }} />Online</div>
             </div>
           </div>
@@ -767,7 +767,7 @@ function Paywall({ onSubscribe, onClose }) {
       <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 20, width: "100%", maxWidth: 390, maxHeight: "90vh", overflowY: "auto", padding: 22, boxShadow: `0 0 80px ${C.accent}20` }}>
         <div style={{ textAlign: "center", marginBottom: 20 }}>
           <div style={{ fontSize: 32, marginBottom: 7 }}>⚡</div>
-          <div style={{ color: C.text, fontWeight: 800, fontSize: 18 }}>Upgrade RentMind</div>
+          <div style={{ color: C.text, fontWeight: 800, fontSize: 18 }}>Upgrade RentSage</div>
           <div style={{ color: C.sub, fontSize: 12, marginTop: 4 }}>You've reached the free plan limit</div>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 9, marginBottom: 16 }}>
@@ -869,8 +869,8 @@ export default function RentMind({ session }) {
 
   const deleteTenant = async (id) => {
     const { error } = await supabase.from("tenants").delete().eq("id", id);
-    if (!error) { setTenants(p => p.filter(t => t.id !== id)); notify("Removed", C.red); }
-    close();
+    if (!error) { setTenants(p => p.filter(t => t.id !== id)); notify("Tenant removed", C.red); close(); }
+    else notify("Error deleting tenant", C.red);
   };
 
   const calcRisk = (history, streak) => {
@@ -886,8 +886,8 @@ export default function RentMind({ session }) {
     const newRisk = calcRisk(newHistory, newStreak);
     const updated = { ...tenant, paid: true, streak: newStreak, risk: newRisk, payments: [payment, ...(tenant.payments || [])], history: newHistory };
     const { error } = await supabase.from("tenants").update(tenantToDb(updated, userId)).eq("id", tenant.id);
-    if (!error) { setTenants(p => p.map(t => t.id === tenant.id ? updated : t)); notify("💰 Payment logged!", C.green); }
-    close();
+    if (!error) { setTenants(p => p.map(t => t.id === tenant.id ? updated : t)); notify("💰 Payment logged!", C.green); close(); }
+    else notify("Error logging payment", C.red);
   };
 
   const updateLease = async (tenant, data) => {
@@ -1303,7 +1303,7 @@ export default function RentMind({ session }) {
       {modal?.type === "form" && <TenantForm initial={modal.data} onSave={saveTenant} onClose={close} />}
       {modal?.type === "detail" && (
         <TenantDetail
-          tenant={modal.data}
+          tenant={tenants.find(t => t.id === modal.data?.id) || modal.data}
           onClose={close}
           onEdit={t => open("form", t)}
           onDelete={deleteTenant}
@@ -1335,7 +1335,7 @@ export default function RentMind({ session }) {
         />
       )}
       {modal?.type === "lease" && <LeaseModal tenant={modal.data} onClose={close} onSave={(data) => { updateLease(modal.data, data); close(); }} />}
-      {modal?.type === "maintenance" && <MaintenanceModal tenant={modal.data} onClose={close} onSave={(req) => { if (modal.data) addMaintenance(modal.data, req); close(); }} />}
+      {modal?.type === "maintenance" && <MaintenanceModal tenant={modal.data} onClose={close} onSave={(req) => { if (modal.data) { addMaintenance(modal.data, req); } else { notify("Please open a request from a specific tenant.", C.yellow); close(); } }} />}
       {modal?.type === "expense" && <ExpenseModal onClose={close} onSave={addExpense} />}
       {modal?.type === "chat" && <AIChat tenants={tenants} expenses={expenses} onClose={close} />}
       {modal?.type === "paywall" && <Paywall onSubscribe={p => { setPlan(p.id); close(); notify(`🎉 Upgraded to ${p.name}!`, C.accent); }} onClose={close} />}

@@ -13,7 +13,7 @@ export function PrivacyPolicy({ onClose }) {
           <button onClick={onClose} style={{ background: "none", border: "none", color: C.sub, cursor: "pointer", fontSize: 20 }}>✕</button>
         </div>
         <div style={{ overflowY: "auto", padding: "20px", color: C.sub, fontSize: 13, lineHeight: 1.8 }}>
-          <p style={{ color: C.text, fontWeight: 700, marginBottom: 8 }}>Last updated: March 2026</p>
+          <p style={{ color: C.text, fontWeight: 700, marginBottom: 8 }}>Last updated: April 2026</p>
           <p style={{ marginBottom: 16 }}>RentSage ("we", "us", or "our") operates the RentSage property management platform. This policy explains how we collect, use, and protect your information.</p>
           
           <p style={{ color: C.text, fontWeight: 700, marginBottom: 8 }}>Information We Collect</p>
@@ -29,7 +29,7 @@ export function PrivacyPolicy({ onClose }) {
           <p style={{ marginBottom: 16 }}>We use Stripe for payments, Supabase for data storage, and Anthropic for AI features. Each has their own privacy policy.</p>
           
           <p style={{ color: C.text, fontWeight: 700, marginBottom: 8 }}>Contact Us</p>
-          <p style={{ marginBottom: 16 }}>For privacy questions, contact us at: support@rentsage.app</p>
+          <p style={{ marginBottom: 16 }}>For privacy questions, contact us at: rentsageapp@gmail.com</p>
         </div>
       </div>
     </div>
@@ -45,7 +45,7 @@ export function TermsOfService({ onClose }) {
           <button onClick={onClose} style={{ background: "none", border: "none", color: C.sub, cursor: "pointer", fontSize: 20 }}>✕</button>
         </div>
         <div style={{ overflowY: "auto", padding: "20px", color: C.sub, fontSize: 13, lineHeight: 1.8 }}>
-          <p style={{ color: C.text, fontWeight: 700, marginBottom: 8 }}>Last updated: March 2026</p>
+          <p style={{ color: C.text, fontWeight: 700, marginBottom: 8 }}>Last updated: April 2026</p>
           <p style={{ marginBottom: 16 }}>By using RentSage, you agree to these terms. Please read them carefully.</p>
           
           <p style={{ color: C.text, fontWeight: 700, marginBottom: 8 }}>Use of Service</p>
@@ -61,7 +61,7 @@ export function TermsOfService({ onClose }) {
           <p style={{ marginBottom: 16 }}>RentSage is provided "as is". We are not responsible for any damages arising from use of our service. Always verify legal compliance with local landlord-tenant laws.</p>
           
           <p style={{ color: C.text, fontWeight: 700, marginBottom: 8 }}>Contact</p>
-          <p style={{ marginBottom: 16 }}>Questions? Email us at: support@rentsage.app</p>
+          <p style={{ marginBottom: 16 }}>Questions? Email us at: rentsageapp@gmail.com</p>
         </div>
       </div>
     </div>

@@ -1,5 +1,5 @@
 /* eslint-disable */
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "./supabase";
 
 export default function Landing() {
@@ -8,13 +8,15 @@ export default function Landing() {
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [showInstall, setShowInstall] = useState(false);
 
-  useState(() => {
-    window.addEventListener('beforeinstallprompt', (e) => {
+  useEffect(() => {
+    const handler = (e) => {
       e.preventDefault();
       setDeferredPrompt(e);
       setShowInstall(true);
-    });
-  });
+    };
+    window.addEventListener('beforeinstallprompt', handler);
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
 
   const [showIOSInstructions, setShowIOSInstructions] = useState(false);
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
@@ -133,7 +135,7 @@ export default function Landing() {
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
             <div>
               <div style={{ fontSize: 18, fontWeight: 800 }}>Rent<span style={{ color: "#38BDF8" }}>Sage</span></div>
-              <div style={{ color: "#2D4460", fontSize: 10 }}>March 2026 · Free</div>
+              <div style={{ color: "#2D4460", fontSize: 10 }}>{new Date().toLocaleDateString('en-CA', { month: 'long', year: 'numeric' })} · Free</div>
             </div>
             <div style={{ background: "#38BDF818", border: "1px solid #38BDF840", borderRadius: 8, padding: "6px 10px", color: "#38BDF8", fontSize: 11, fontWeight: 700 }}>🤖 AI</div>
           </div>

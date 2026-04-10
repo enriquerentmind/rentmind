@@ -28,6 +28,11 @@ export default function Auth() {
   const handle = async () => {
     setLoading(true);
     setError("");
+    if (mode === "signup" && password.length < 6) {
+      setError("Password must be at least 6 characters.");
+      setLoading(false);
+      return;
+    }
     try {
       if (mode === "login") {
         const { error } = await supabase.auth.signInWithPassword({ email, password });

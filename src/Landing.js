@@ -84,10 +84,13 @@ export default function Landing() {
         <div style={{ display: "inline-block", background: "#38BDF812", border: "1px solid #38BDF840", borderRadius: 20, padding: "6px 16px", fontSize: 12, fontWeight: 700, color: "#38BDF8", marginBottom: 24, letterSpacing: 1 }}>
           🇨🇦 BUILT FOR CANADIAN LANDLORDS
         </div>
-        <h1 style={{ fontSize: 42, fontWeight: 800, lineHeight: 1.15, marginBottom: 20, letterSpacing: -1 }}>
+        <h1 style={{ fontSize: 42, fontWeight: 800, lineHeight: 1.15, marginBottom: 16, letterSpacing: -1 }}>
           Manage your rentals<br />
           <span style={{ color: "#38BDF8" }}>smarter with AI</span>
         </h1>
+        <p style={{ fontSize: 20, fontWeight: 700, color: "#F0F8FF", marginBottom: 20, letterSpacing: -0.3 }}>
+          Manage less. Earn more.
+        </p>
         <p style={{ color: "#7A97BC", fontSize: 17, lineHeight: 1.7, marginBottom: 40 }}>
           RentSage helps small landlords track payments, manage tenants, predict late payers, and send AI-powered reminders — all in one place.
         </p>
